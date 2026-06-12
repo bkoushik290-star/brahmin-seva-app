@@ -9,10 +9,10 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
         
         body {
-            font-family: 'Hind Siliguri', 'Poppins', sans-serif;
+            font-family: 'Hind Siliguri', sans-serif;
             background-color: #FFFDF9;
         }
         .bg-puja-orange {
@@ -51,7 +51,7 @@
         </div>
     </header>
 
-    <!-- TAB NAVIGATION (Inspired by Screenshot_20260612-104559_Claude.jpg) -->
+    <!-- TAB NAVIGATION -->
     <div class="px-4 py-3">
         <div class="bg-puja-dark p-1 rounded-xl flex">
             <button id="tab-purohit" onclick="switchTab('purohit')" class="w-1/2 bg-puja-orange text-white py-2.5 px-4 rounded-lg font-bold text-sm transition-all flex items-center justify-center space-x-2">
@@ -79,7 +79,7 @@
                 <form id="profile-form" class="mt-4 space-y-3 hidden" onsubmit="saveProfile(event)">
                     <div>
                         <label id="lbl-name" class="block text-xs font-bold text-gray-600 mb-1">পুরোহিতের নাম</label>
-                        <input type="text" id="p-name" required placeholder="উদা: পণ্ডিত রামকৃষ্ণ शास्त्री" class="w-full text-sm p-2 rounded-lg border border-orange-200 focus:outline-none">
+                        <input type="text" id="p-name" required placeholder="উদা: পণ্ডিত রামকৃষ্ণ শাস্ত্রী" class="w-full text-sm p-2 rounded-lg border border-orange-200 focus:outline-none">
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -110,7 +110,7 @@
             </div>
         </div>
 
-        <!-- SECTION 2: FEATURES & UPDATED DONATIONS -->
+        <!-- SECTION 2: FEATURES -->
         <div id="section-features" class="space-y-6 hidden">
             
             <!-- BRIEF PANJIKA -->
@@ -235,15 +235,15 @@
     <script>
         const localization = {
             bn: {
-                subtitle: "পূজো সেবা ও বুকিং প্ল্যাটফর্ম", tabPurohit: "পুরोहित প্রোফাইল", tabFeatures: "সেবা ও পঞ্জিকা",
-                createTitle: "নতুন পুরोहित প্রোফাইল তৈরি করুন", lblName: "পুরোহিতের নাম", lblDegree: "যোগ্যতা / ডিগ্রি",
+                subtitle: "পূজো সেবা ও বুকিং প্ল্যাটফর্ম", tabPurohit: "পুরোহিত প্রোফাইল", tabFeatures: "সেবা ও পঞ্জিকা",
+                createTitle: "নতুন পুরোহিত প্রোফাইল তৈরি করুন", lblName: "পুরোহিতের নাম", lblDegree: "যোগ্যতা / ডিগ্রি",
                 lblExp: "অভিজ্ঞতা (বছর)", lblFees: "ন্যূনতম দক্ষিণা (₹)", lblLoc: "অবস্থান / জেলা", btnSubmitProfile: "প্রোফাইল লাইভ করুন",
                 panjikaHeader: "সংক্ষেপে আজকের পঞ্জিকা", panjikaDateLbl: "তারিখ ও বার:", panjikaDate: "১২ জুন, ২০২৬ | শুক্রবার",
                 panjikaTithiLbl: "তিথি:", panjikaTithi: "কৃষ্ণাদ্বাদশীতিথি", panjikaNakshatraLbl: "নক্ষত্র:", panjikaNakshatra: "ভরনী নক্ষত্র",
                 panjikaMuhurtaLbl: "শুভ মুহূর্ত:", panjikaMuhurta: "সকাল ০৫:২৪ - সকাল ০৭:১১", donationHeader: "ডিজিটাল দান ও কল্যাণ তহবিল",
                 lblDonCat: "দানের খাত/ক্যাটাগরি নির্বাচন করুন:", donCat1: "১. নব উপনীত ব্রাহ্মণদের শিক্ষার ব্যবস্থা উন্নত করতে দান",
                 donCat2: "২. গণ বিবাহের জন্য যৌথ দান", donCat3: "৩. গণ উপনয়নের আয়োজন ও সহায়তায় দান", donCat4: "৪. মন্দির বাস্তবায়নের (নির্মাণ ও সংস্কার) জন্যে দান",
-                donCat5: "৫. বিশেষ মনস্কামনা পূরণে সংকল্পের দান", lblDonName: "দাতার নাম", lblDonGotra: "গোत्र", lblDonAmount: "দানের পরিমাণ (₹)",
+                donCat5: "৫. বিশেষ মনস্কামনা পূরণে সংকল্পের দান", lblDonName: "দাতার নাম", lblDonGotra: "গোত্র", lblDonAmount: "দানের পরিমাণ (₹)",
                 btnDonate: "ডিজিটাল সংকল্প ও দান করুন", footerPlaceholder: "ক্যাটাগরি বা সেবা খুঁজুন...", verified: "✓ যাচাইকৃত",
                 experience: "বছরের অভিজ্ঞতা", totalPuja: "মোট পূজা", rating: "গড় রেটিং", reviews: "রিভিউ", available: "এখন উপলব্ধ", from: "থেকে", btnBook: "বুক করুন"
             },
@@ -259,37 +259,11 @@
                 donCat5: "5. Special Wish-Fulfillment Sankalpa", lblDonName: "Donor Name", lblDonGotra: "Gotra", lblDonAmount: "Amount (₹)",
                 btnDonate: "Make Sankalpa & Donate", footerPlaceholder: "Search services...", verified: "✓ Verified",
                 experience: "Years Exp", totalPuja: "Total Puja", rating: "Avg Rating", reviews: "Reviews", available: "Available Now", from: "onwards", btnBook: "Book"
-            },
-            hi: {
-                subtitle: "पूजा सेवा एवं बुकिंग प्लेटफॉर्म", tabPurohit: "पुरोहित प्रोफाइल", tabFeatures: "सेवा एवं पंचांग",
-                createTitle: "नई पुरोहित प्रोफाइल बनाएं", lblName: "पुरोहित का नाम", lblDegree: "योग्यता",
-                lblExp: "अनुभव (वर्ष)", lblFees: "न्यूनतम दक्षिणा (₹)", lblLoc: "स्थान", btnSubmitProfile: "प्रोफ़ाइल लाइव करें",
-                panjikaHeader: "आज का संक्षिप्त पंचांग", panjikaDateLbl: "दिनांक:", panjikaDate: "१२ जून, २०२६ | शुक्रवार",
-                panjikaTithiLbl: "तिथि:", panjikaTithi: "कृष्ण द्वादशी", panjikaNakshatraLbl: "नक्षत्र:", panjikaNakshatra: "भरणी नक्षत्र",
-                panjikaMuhurtaLbl: "शुभ मुहूर्त:", panjikaMuhurta: "05:24 AM - 07:11 AM", donationHeader: "डिजिटल दान एवं कल्याण कोष",
-                lblDonCat: "दान श्रेणी का चयन करें:", donCat1: "१. नव उपनीत ब्राह्मणों की शिक्षा व्यवस्था हेतु दान",
-                donCat2: "२. सामूहिक विवाह आयोजन के लिए दान", donCat3: "३. सामूहिक उपनयन आयोजन सहायता हेतु दान", donCat4: "४. मंदिर निर्माण और जीर्णोद्धार हेतु दान",
-                donCat5: "५. मनोकामना पूर्ति संकल्प हेतु विशेष दान", lblDonName: "दाता का नाम", lblDonGotra: "गोत्र", lblDonAmount: "राशि (₹)",
-                btnDonate: "डिजिटल संकल्प और दान करें", footerPlaceholder: "सेवा खोजें...", verified: "✓ सत्यापित",
-                experience: "वर्ष अनुभव", totalPuja: "कुल पूजा", rating: "रेटिंग", reviews: "समीक्षाएं", available: "अभी उपलब्ध", from: "से शुरू", btnBook: "बुक करें"
-            },
-            sa: {
-                subtitle: "पूजा सेवा च आरक्षण मञ्चः", tabPurohit: "पुरोहित विवरणिका", tabFeatures: "सेवा च पञ्चाङ्गम्",
-                createTitle: "नूतन पुरोहित विवरणिकां रचयन्तु", lblName: "पुरोहितस्य नाम", lblDegree: "उपाधिः",
-                lblExp: "अनुभवः (वर्षाणि)", lblFees: "न्यूनतम दक्षिणा (₹)", lblLoc: "स्थानम्", btnSubmitProfile: "विवरणিকাं प्रकाशयन्तु",
-                panjikaHeader: "अद्यतन संक्षिप्त पञ्चाङ्गम्", panjikaDateLbl: "तिथिवासरौ:", panjikaDate: "१२ जून, २०२६ | भृगुवासरः",
-                panjikaTithiLbl: "तिथिः:", panjikaTithi: "कृष्णपक्ष द्वादशी", panjikaNakshatraLbl: "नक्षत्रम्:", panjikaNakshatra: "भरणी",
-                panjikaMuhurtaLbl: "शुभमुहूर्तः:", panjikaMuhurta: "०५:२४ - ०७:११", donationHeader: "डिजिटल दानम् एवं कोषः",
-                lblDonCat: "दानश्रेणीं चिनोतु:", donCat1: "१. नव उपनीत ब्राह्मणानां शिक्षण सुधायै दानम्",
-                donCat2: "२. सामूहिक विवाह आयोजनार्थं संयुक्त दानम्", donCat3: "३. सामूहिक उपनयन संस्कार सहायतार्थं दानम्", donCat4: "४. मन्दिर निर्माणाय एवं जीर्णोद्धाराय दानम्",
-                donCat5: "५. मनोकामना पूर्तये विशेष संकल्प दानम्", lblDonName: "दातुः नाम", lblDonGotra: "गोत्रम्", lblDonAmount: "दान राशिः (₹)",
-                btnDonate: "डिजिटल संकल्पं कृत्वा दानं ददातु", footerPlaceholder: "सेवा अन्विष्यन्तु...", verified: "✓ प्रमाणीकृत",
-                experience: "वर्षानुभवः", totalPuja: "कुल पूजाः", rating: "मूल्याङ्कनम्", reviews: "समीक्षाः", available: "अधुना उपलब्धः", from: "आरभ्य", btnBook: "आरक्षणं कुरु"
             }
         };
 
         let defaultProfiles = [{
-            id: 1, name: "পণ্ডিত रामकृष्ण शास्त्री", degree: "বেদান্ত বিশারদ", experience: "২৮", totalPuja: "২,৮৪০", rating: "৪.৯★", reviews: "৩১২", location: "কলকাতা", fees: "১,৫০১", avatar: "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=priest1"
+            id: 1, name: "পণ্ডিত রামকৃষ্ণ শাস্ত্রী", degree: "বেদান্ত বিশারদ", experience: "২৮", totalPuja: "২,৮৪০", rating: "৪.৯★", reviews: "৩১২", location: "কলকাতা", fees: "১,৫০১", avatar: "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=priest1"
         }];
 
         let currentLang = "bn";
@@ -404,16 +378,7 @@
 
         function handleDonation(e) {
             e.preventDefault();
-            const name = document.getElementById("don-name").value;
-            const gotra = document.getElementById("don-gotra").value;
-            const amt = document.getElementById("don-amount").value;
-            const catId = document.querySelector('input[name="don_category"]:checked').value;
-            const catTxt = document.getElementById("don-" + catId.replace("_", "-")).innerText;
-            
-            alert(`✨ সংকল্প ও দান সফল হয়েছে! ✨\n\nदाता: ${name}\nगोत्र: ${gotra}\nখাত: ${catTxt}\nপরিমাণ: ₹${amt}`);
-            document.getElementById("don-name").value = "";
-            document.getElementById("don-gotra").value = "";
-            document.getElementById("don-amount").value = "";
+            alert(`✨ সংকল্প ও দান সফল হয়েছে! ✨`);
         }
 
         function openBookingModal(id) {
@@ -427,7 +392,7 @@
 
         function confirmBooking(e) {
             e.preventDefault();
-            alert(`✅ বুকিং নিশ্চিতকরণ সফল হয়েছে!\nনাম: ${document.getElementById("b-user").value}\nপূজা: ${document.getElementById("b-puja").value}`);
+            alert(`✅ বুকিং নিশ্চিতকরণ সফল হয়েছে!`);
             closeBookingModal();
         }
     </script>
