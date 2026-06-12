@@ -1,0 +1,879 @@
+import { useState, useEffect } from "react";
+
+/* ═══════════════════════════════════════════════════════════
+   PUJACONNECT — BOOKING CALENDAR + PAYMENT GATEWAY
+   Aesthetic: Warm Sacred Luxury · Deep saffron × ink × gold
+   Flow: Service Select → Calendar → Time Slot → Summary → Payment → Confirm
+═══════════════════════════════════════════════════════════ */
+
+const C = {
+  saffron:    "#D4500A",
+  saffronLt:  "#F06A20",
+  saffronXlt: "#FFF1E6",
+  gold:       "#C8970A",
+  goldLt:     "#FFF8DC",
+  ink:        "#1C0F00",
+  inkMid:     "#3D2410",
+  inkLt:      "#6B4226",
+  cream:      "#FDF6EE",
+  ashLt:      "#F5EDE2",
+  ash:        "#EAD8C4",
+  border:     "#DEC9B0",
+  white:      "#FFFFFF",
+  green:      "#1B6B3A",
+  greenLt:    "#E6F4ED",
+  red:        "#B91C1C",
+  redLt:      "#FEE2E2",
+  blue:       "#1D4ED8",
+  blueLt:     "#EFF6FF",
+  shadow:     "rgba(28,15,0,0.10)",
+};
+
+const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600;700&display=swap');`;
+
+/* ── PUJA SERVICES ─────────────────────────────────────── */
+const SERVICES = [
+  { id:1, name:"সত্যনারায়ণ পূজা", icon:"🪔", duration:"২–৩ ঘণ্টা", dakshina:801,  tag:"জনপ্রিয়" },
+  { id:2, name:"গৃহপ্রবেশ পূজা",  icon:"🏠", duration:"২–৩ ঘণ্টা", dakshina:1501, tag:null },
+  { id:3, name:"অন্নপ্রাশন",       icon:"🍚", duration:"১–২ ঘণ্টা", dakshina:601,  tag:"সহজ" },
+  { id:4, name:"বিবাহ অনুষ্ঠান",   icon:"💍", duration:"৪–৬ ঘণ্টা", dakshina:8000, tag:"প্রিমিয়াম" },
+  { id:5, name:"কালীপূজা",         icon:"🔱", duration:"২–৩ ঘণ্টা", dakshina:1201, tag:null },
+  { id:6, name:"গণেশ পূজা",        icon:"🐘", duration:"১–২ ঘণ্টা", dakshina:501,  tag:"সহজ" },
+];
+
+/* ── SLOTS ─────────────────────────────────────────────── */
+const TIME_SLOTS = [
+  { id:"s1", time:"ভোর ৫:০০", period:"ব্রাহ্মমুহূর্ত", available:true,  auspicious:true  },
+  { id:"s2", time:"সকাল ৭:০০", period:"প্রভাত",        available:true,  auspicious:true  },
+  { id:"s3", time:"সকাল ৯:০০", period:"পূর্বাহ্ন",     available:false, auspicious:false },
+  { id:"s4", time:"সকাল ১১:০০",period:"পূর্বাহ্ন",     available:true,  auspicious:true  },
+  { id:"s5", time:"দুপুর ১২:০০",period:"মধ্যাহ্ন",     available:true,  auspicious:false },
+  { id:"s6", time:"বিকেল ৪:০০", period:"অপরাহ্ন",      available:true,  auspicious:false },
+  { id:"s7", time:"সন্ধ্যা ৬:০০",period:"গোধূলি",      available:false, auspicious:true  },
+  { id:"s8", time:"রাত ৮:০০",   period:"সন্ধ্যা",      available:true,  auspicious:false },
+];
+
+/* ── AUSPICIOUS TITHIS ─────────────────────────────────── */
+const TITHI_MAP = { 3:"দ্বিতীয়া ★", 7:"সপ্তমী ★", 11:"একাদশী ★★", 15:"পূর্ণিমা ★★★", 19:"নবমী ★", 23:"ত্রয়োদশী ★", 27:"সপ্তমী ★" };
+
+/* ── PAYMENT METHODS ───────────────────────────────────── */
+const PAY_METHODS = [
+  { id:"upi",  label:"UPI",          icon:"📱", desc:"GPay · PhonePe · BHIM · Paytm" },
+  { id:"card", label:"ডেবিট/ক্রেডিট কার্ড", icon:"💳", desc:"Visa · Mastercard · RuPay" },
+  { id:"net",  label:"নেট ব্যাংকিং",icon:"🏦", desc:"SBI · HDFC · ICICI ও আরও ১৫+" },
+];
+
+const UPI_APPS = [
+  { id:"gpay",   label:"Google Pay", color:"#4285F4", emoji:"G" },
+  { id:"phonepe",label:"PhonePe",    color:"#5F259F", emoji:"P" },
+  { id:"paytm",  label:"Paytm",      color:"#00BAF2", emoji:"T" },
+  { id:"bhim",   label:"BHIM",       color:"#1A5276", emoji:"B" },
+];
+
+const BANKS = ["SBI","HDFC","ICICI","Axis","PNB","BOB","Kotak","Yes Bank","IndusInd","IDFC"];
+
+/* ══════════════════════════════════════════════════════════
+   STYLES
+══════════════════════════════════════════════════════════ */
+const G = `
+${FONTS}
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+html { font-size: 15px; }
+body { font-family:'Outfit',sans-serif; background:${C.cream}; color:${C.ink}; }
+
+.wrap {
+  min-height:100vh;
+  background: radial-gradient(ellipse 120% 60% at 80% 0%, #FFD59A33 0%, transparent 60%),
+              radial-gradient(ellipse 80% 80% at -10% 100%, #F0621022 0%, transparent 50%),
+              ${C.cream};
+}
+
+/* ── STEP BAR ── */
+.step-bar { display:flex; align-items:center; justify-content:center; gap:0; padding:22px 16px 0; }
+.step-node {
+  display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer;
+  transition: opacity .2s;
+}
+.step-circle {
+  width:32px; height:32px; border-radius:50%; border:2px solid ${C.border};
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Outfit',sans-serif; font-size:13px; font-weight:600;
+  background:${C.white}; color:${C.inkLt}; transition:all .3s;
+}
+.step-circle.done  { background:${C.saffron}; border-color:${C.saffron}; color:#fff; }
+.step-circle.active{ background:${C.ink}; border-color:${C.ink}; color:#fff; box-shadow:0 0 0 3px ${C.saffron}44; }
+.step-label { font-size:10px; color:${C.inkLt}; font-weight:500; white-space:nowrap; }
+.step-label.active { color:${C.ink}; font-weight:700; }
+.step-line { flex:1; height:2px; background:${C.border}; min-width:18px; max-width:40px; margin-bottom:18px; transition:background .3s; }
+.step-line.done { background:${C.saffron}; }
+
+/* ── CARD ── */
+.card {
+  background:${C.white};
+  border-radius:24px;
+  box-shadow: 0 2px 24px ${C.shadow}, 0 0 0 1px ${C.border};
+  overflow:hidden;
+}
+
+/* ── SECTION HEADER ── */
+.sec-hd {
+  padding:20px 20px 14px;
+  border-bottom:1px solid ${C.ashLt};
+  background: linear-gradient(135deg, ${C.saffronXlt} 0%, ${C.white} 60%);
+}
+.sec-om { font-family:'Cormorant Garamond',serif; font-size:28px; color:${C.saffron}; opacity:.5; }
+.sec-title { font-family:'Cormorant Garamond',serif; font-size:24px; color:${C.ink}; font-weight:600; line-height:1.2; }
+.sec-sub { font-size:12px; color:${C.inkLt}; margin-top:3px; }
+
+/* ── SERVICE CARD ── */
+.svc-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:16px; }
+.svc-card {
+  border:1.5px solid ${C.border}; border-radius:16px; padding:14px 12px;
+  cursor:pointer; transition:all .22s; background:${C.white}; position:relative;
+  display:flex; flex-direction:column; gap:6px;
+}
+.svc-card:hover { border-color:${C.saffron}; background:${C.saffronXlt}; transform:translateY(-2px); box-shadow:0 6px 18px ${C.shadow}; }
+.svc-card.sel { border-color:${C.saffron}; background:${C.saffronXlt}; box-shadow:0 0 0 3px ${C.saffron}28; }
+.svc-icon { font-size:28px; }
+.svc-name { font-size:13px; font-weight:600; color:${C.ink}; line-height:1.3; }
+.svc-dur  { font-size:11px; color:${C.inkLt}; }
+.svc-price{ font-size:15px; font-weight:700; color:${C.saffron}; }
+.svc-tag  { position:absolute; top:8px; right:8px; font-size:9px; font-weight:700;
+            padding:2px 7px; border-radius:99px; background:${C.gold}; color:${C.white}; letter-spacing:.4px; }
+
+/* ── CALENDAR ── */
+.cal-wrap { padding:16px; }
+.cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.cal-nav-btn {
+  width:34px; height:34px; border-radius:10px; border:1.5px solid ${C.border};
+  background:${C.white}; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:all .2s; color:${C.inkMid};
+}
+.cal-nav-btn:hover { background:${C.saffron}; color:#fff; border-color:${C.saffron}; }
+.cal-month { font-family:'Cormorant Garamond',serif; font-size:20px; color:${C.ink}; font-weight:600; }
+.cal-year  { font-size:13px; color:${C.inkLt}; margin-top:1px; }
+.cal-grid  { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+.cal-day-hd{ text-align:center; font-size:10px; font-weight:700; color:${C.inkLt};
+             text-transform:uppercase; letter-spacing:.5px; padding:6px 0; }
+.cal-day {
+  aspect-ratio:1; border-radius:10px; border:1.5px solid transparent;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer; transition:all .2s; font-size:13px; font-weight:500; color:${C.inkMid};
+  position:relative;
+}
+.cal-day:hover:not(.empty):not(.past) { background:${C.ashLt}; border-color:${C.border}; }
+.cal-day.past  { color:${C.border}; cursor:default; }
+.cal-day.empty { cursor:default; }
+.cal-day.today { background:${C.ashLt}; font-weight:700; color:${C.inkMid}; }
+.cal-day.auspicious::after {
+  content:''; position:absolute; bottom:3px; left:50%; transform:translateX(-50%);
+  width:4px; height:4px; border-radius:50%; background:${C.gold};
+}
+.cal-day.sel {
+  background:${C.saffron}; color:#fff; border-color:${C.saffron};
+  box-shadow:0 4px 12px ${C.saffron}44; font-weight:700;
+}
+.cal-day.sel::after { background:#fff; }
+.cal-legend { display:flex; gap:14px; margin-top:10px; padding-top:10px; border-top:1px solid ${C.ashLt}; }
+.cal-legend-item { display:flex; align-items:center; gap:5px; font-size:11px; color:${C.inkLt}; }
+.leg-dot { width:8px; height:8px; border-radius:50%; }
+
+/* ── TIME SLOTS ── */
+.slot-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:16px; }
+.slot-card {
+  border:1.5px solid ${C.border}; border-radius:12px; padding:11px 12px;
+  cursor:pointer; transition:all .2s; background:${C.white}; position:relative;
+  display:flex; gap:10px; align-items:center;
+}
+.slot-card:hover:not(.unavail) { border-color:${C.saffron}; background:${C.saffronXlt}; }
+.slot-card.sel { border-color:${C.saffron}; background:${C.saffronXlt}; box-shadow:0 0 0 3px ${C.saffron}22; }
+.slot-card.unavail { background:${C.ashLt}; cursor:not-allowed; opacity:.55; }
+.slot-time   { font-size:13px; font-weight:600; color:${C.ink}; }
+.slot-period { font-size:10px; color:${C.inkLt}; margin-top:2px; }
+.slot-aus { position:absolute; top:6px; right:8px; font-size:9px; color:${C.gold}; font-weight:700; }
+
+/* ── SUMMARY ── */
+.sum-wrap { padding:16px; display:flex; flex-direction:column; gap:12px; }
+.sum-row  { display:flex; justify-content:space-between; align-items:flex-start;
+            padding:12px 0; border-bottom:1px solid ${C.ashLt}; }
+.sum-row:last-child { border:none; }
+.sum-key  { font-size:13px; color:${C.inkLt}; font-weight:500; }
+.sum-val  { font-size:13px; color:${C.ink}; font-weight:600; text-align:right; }
+.sum-total-row { background:${C.saffronXlt}; border-radius:14px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; }
+.sum-total-key { font-size:14px; color:${C.saffron}; font-weight:600; }
+.sum-total-val { font-family:'Cormorant Garamond',serif; font-size:26px; color:${C.saffron}; font-weight:600; }
+.address-box { border:1.5px solid ${C.border}; border-radius:14px; overflow:hidden; }
+.addr-input {
+  width:100%; padding:11px 14px; border:none; outline:none;
+  font-family:'Outfit',sans-serif; font-size:13px; color:${C.ink}; background:${C.white};
+  border-bottom:1px solid ${C.ashLt};
+}
+.addr-input:last-child { border-bottom:none; }
+.addr-input::placeholder { color:${C.border}; }
+
+/* ── PAYMENT ── */
+.pay-wrap { padding:16px; display:flex; flex-direction:column; gap:14px; }
+.pay-method-card {
+  border:1.5px solid ${C.border}; border-radius:14px; padding:13px 14px;
+  cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:12px;
+  background:${C.white};
+}
+.pay-method-card:hover { border-color:${C.saffron}; background:${C.saffronXlt}; }
+.pay-method-card.sel { border-color:${C.saffron}; background:${C.saffronXlt}; box-shadow:0 0 0 3px ${C.saffron}20; }
+.pay-icon { font-size:24px; width:42px; height:42px; border-radius:10px;
+            background:${C.ashLt}; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.pay-label { font-size:14px; font-weight:600; color:${C.ink}; }
+.pay-desc  { font-size:11px; color:${C.inkLt}; margin-top:2px; }
+.radio { width:18px; height:18px; border-radius:50%; border:2px solid ${C.border};
+         margin-left:auto; flex-shrink:0; transition:all .2s; display:flex; align-items:center; justify-content:center; }
+.radio.sel { border-color:${C.saffron}; background:${C.saffron}; }
+.radio.sel::after { content:''; width:7px; height:7px; border-radius:50%; background:#fff; }
+
+.upi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:10px; }
+.upi-btn  {
+  border-radius:12px; padding:10px 6px; border:1.5px solid ${C.border};
+  cursor:pointer; text-align:center; transition:all .2s; background:${C.white};
+  font-family:'Outfit',sans-serif;
+}
+.upi-btn:hover { border-color:${C.saffron}; transform:translateY(-2px); }
+.upi-btn.sel { border-color:${C.saffron}; box-shadow:0 0 0 3px ${C.saffron}22; }
+.upi-logo { width:34px; height:34px; border-radius:8px; margin:0 auto 5px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:16px; font-weight:800; color:#fff; }
+.upi-name { font-size:10px; font-weight:600; color:${C.inkMid}; }
+.upi-input-row { display:flex; gap:8px; margin-top:10px; }
+.upi-input { flex:1; padding:10px 13px; border:1.5px solid ${C.border}; border-radius:10px;
+             font-family:'Outfit',sans-serif; font-size:13px; outline:none; color:${C.ink}; }
+.upi-input:focus { border-color:${C.saffron}; }
+.upi-verify { padding:10px 16px; background:${C.ink}; color:#fff; border:none; border-radius:10px;
+              font-family:'Outfit',sans-serif; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; white-space:nowrap; }
+.upi-verify:hover { background:${C.saffron}; }
+
+.card-form { display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+.card-row  { display:flex; gap:8px; }
+.card-input {
+  width:100%; padding:11px 13px; border:1.5px solid ${C.border}; border-radius:10px;
+  font-family:'Outfit',sans-serif; font-size:13px; outline:none; color:${C.ink};
+  transition: border-color .2s;
+}
+.card-input:focus { border-color:${C.saffron}; }
+.card-input::placeholder { color:#C4A88A; }
+
+.bank-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:10px; max-height:200px; overflow-y:auto; padding-right:2px; }
+.bank-btn {
+  padding:9px 12px; border:1.5px solid ${C.border}; border-radius:10px;
+  background:${C.white}; cursor:pointer; font-family:'Outfit',sans-serif;
+  font-size:12px; font-weight:600; color:${C.inkMid}; transition:all .2s; text-align:left;
+  display:flex; align-items:center; gap:8px;
+}
+.bank-btn:hover { border-color:${C.saffron}; background:${C.saffronXlt}; color:${C.saffron}; }
+.bank-btn.sel { border-color:${C.saffron}; background:${C.saffronXlt}; color:${C.saffron}; }
+.bank-icon { width:28px; height:28px; border-radius:6px; background:${C.ink}; color:#fff;
+             font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+
+.escrow-note {
+  background:${C.greenLt}; border:1px solid #A7D7B8; border-radius:12px;
+  padding:11px 13px; display:flex; gap:9px; align-items:flex-start;
+}
+.escrow-note p { font-size:11px; color:${C.green}; line-height:1.6; }
+
+.pay-btn {
+  width:100%; padding:15px; border:none; border-radius:14px; cursor:pointer;
+  font-family:'Outfit',sans-serif; font-size:16px; font-weight:700;
+  background: linear-gradient(135deg, ${C.saffronLt}, ${C.saffron});
+  color:#fff; letter-spacing:.3px;
+  box-shadow: 0 6px 20px ${C.saffron}44;
+  transition:all .22s; position:relative; overflow:hidden;
+}
+.pay-btn:hover { transform:translateY(-2px); box-shadow:0 10px 28px ${C.saffron}55; }
+.pay-btn:active { transform:translateY(0); }
+.pay-btn::before {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.15) 50%, transparent 100%);
+  transform:translateX(-100%); transition:transform .5s;
+}
+.pay-btn:hover::before { transform:translateX(100%); }
+
+/* ── SUCCESS ── */
+.success-wrap { padding:32px 20px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:16px; }
+.success-ring {
+  width:90px; height:90px; border-radius:50%;
+  background: linear-gradient(135deg, ${C.saffron}, ${C.gold});
+  display:flex; align-items:center; justify-content:center; font-size:40px;
+  box-shadow: 0 8px 28px ${C.saffron}44;
+  animation: popIn .5s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+@keyframes popIn { from { transform:scale(0); opacity:0; } to { transform:scale(1); opacity:1; } }
+.success-title { font-family:'Cormorant Garamond',serif; font-size:28px; color:${C.ink}; }
+.success-sub   { font-size:13px; color:${C.inkLt}; line-height:1.7; max-width:280px; }
+.booking-id { background:${C.ashLt}; border-radius:10px; padding:10px 18px;
+              font-size:13px; font-weight:700; color:${C.ink}; letter-spacing:1px; }
+.success-detail { background:${C.saffronXlt}; border-radius:16px; padding:14px 16px; width:100%; text-align:left; }
+.sd-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid ${C.ash}; }
+.sd-row:last-child { border:none; }
+.sd-k { font-size:12px; color:${C.inkLt}; }
+.sd-v { font-size:12px; font-weight:600; color:${C.ink}; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position:sticky; bottom:0; background:${C.white};
+  border-top:1px solid ${C.ash}; padding:14px 20px;
+  display:flex; gap:10px;
+}
+.btn-back {
+  flex:1; padding:13px; border:1.5px solid ${C.border}; border-radius:12px;
+  background:${C.white}; font-family:'Outfit',sans-serif; font-size:14px;
+  font-weight:600; color:${C.inkMid}; cursor:pointer; transition:all .2s;
+}
+.btn-back:hover { background:${C.ashLt}; border-color:${C.inkLt}; }
+.btn-next {
+  flex:2; padding:13px; border:none; border-radius:12px;
+  background: linear-gradient(135deg, ${C.saffronLt}, ${C.saffron});
+  font-family:'Outfit',sans-serif; font-size:14px; font-weight:700;
+  color:#fff; cursor:pointer; transition:all .2s;
+  box-shadow:0 4px 14px ${C.saffron}44; letter-spacing:.2px;
+}
+.btn-next:hover { transform:translateY(-1px); box-shadow:0 6px 20px ${C.saffron}55; }
+.btn-next:disabled { background:${C.ash}; color:${C.border}; cursor:not-allowed; box-shadow:none; transform:none; }
+
+/* ── PUROHIT STRIP ── */
+.purohit-strip {
+  display:flex; align-items:center; gap:12px; padding:12px 16px;
+  background:${C.goldLt}; border-bottom:1px solid ${C.ash};
+}
+.p-avatar { width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#FFE0B2,#FFCC80);
+            display:flex; align-items:center; justify-content:center; font-size:22px;
+            border:2px solid ${C.gold}; flex-shrink:0; }
+.p-name  { font-size:14px; font-weight:700; color:${C.ink}; }
+.p-badge { font-size:10px; font-weight:600; color:${C.green}; background:${C.greenLt}; padding:2px 8px; border-radius:99px; }
+
+/* ── MISC ── */
+.fade-in { animation: fadeUp .3s ease forwards; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.tithi-badge { font-size:9px; color:${C.gold}; font-weight:700; margin-left:4px; }
+`;
+
+/* ══════════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════════ */
+const BN_MONTHS = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
+const BN_DAYS   = ["রবি","সোম","মঙ্গল","বুধ","বৃহ","শুক্র","শনি"];
+
+function toBengali(n) {
+  const map = {"0":"০","1":"১","2":"২","3":"৩","4":"৪","5":"৫","6":"৬","7":"৭","8":"৮","9":"৯"};
+  return String(n).replace(/[0-9]/g, d => map[d]);
+}
+
+function buildCalendar(year, month) {
+  const first = new Date(year, month, 1).getDay();
+  const days  = new Date(year, month + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < first; i++) cells.push(null);
+  for (let d = 1; d <= days; d++) cells.push(d);
+  return cells;
+}
+
+function fmtPrice(n) { return "₹" + toBengali(n.toLocaleString("en-IN")); }
+
+/* ══════════════════════════════════════════════════════════
+   STEP COMPONENTS
+══════════════════════════════════════════════════════════ */
+
+/* ── Step 1: Service Select ── */
+function StepService({ sel, onSel }) {
+  return (
+    <div className="fade-in">
+      <div className="sec-hd">
+        <div className="sec-om">ॐ</div>
+        <div className="sec-title">পূজার ধরন বেছে নিন</div>
+        <div className="sec-sub">কোন পূজার জন্য পুরোহিত প্রয়োজন?</div>
+      </div>
+      <div className="svc-grid">
+        {SERVICES.map(s => (
+          <div key={s.id} className={`svc-card ${sel?.id === s.id ? "sel" : ""}`} onClick={() => onSel(s)}>
+            {s.tag && <div className="svc-tag">{s.tag}</div>}
+            <div className="svc-icon">{s.icon}</div>
+            <div className="svc-name">{s.name}</div>
+            <div className="svc-dur">⏱ {s.duration}</div>
+            <div className="svc-price">{fmtPrice(s.dakshina)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Step 2: Calendar ── */
+function StepCalendar({ selDate, onSel }) {
+  const today = new Date();
+  const [viewY, setViewY] = useState(today.getFullYear());
+  const [viewM, setViewM] = useState(today.getMonth());
+
+  const cells = buildCalendar(viewY, viewM);
+  const todayD = today.getDate(), todayM = today.getMonth(), todayY = today.getFullYear();
+
+  const isPast = (d) => {
+    const dd = new Date(viewY, viewM, d);
+    dd.setHours(0,0,0,0);
+    const t = new Date(); t.setHours(0,0,0,0);
+    return dd < t;
+  };
+
+  const isToday = (d) => d === todayD && viewM === todayM && viewY === todayY;
+  const isSel   = (d) => selDate && d === selDate.getDate() && viewM === selDate.getMonth() && viewY === selDate.getFullYear();
+
+  const prevMonth = () => {
+    if (viewM === 0) { setViewY(y => y-1); setViewM(11); }
+    else setViewM(m => m-1);
+  };
+  const nextMonth = () => {
+    if (viewM === 11) { setViewY(y => y+1); setViewM(0); }
+    else setViewM(m => m+1);
+  };
+
+  return (
+    <div className="fade-in">
+      <div className="sec-hd">
+        <div className="sec-om">ॐ</div>
+        <div className="sec-title">তারিখ বেছে নিন</div>
+        <div className="sec-sub">সোনালি বিন্দু = শুভ তিথি</div>
+      </div>
+      <div className="cal-wrap">
+        <div className="cal-nav">
+          <button className="cal-nav-btn" onClick={prevMonth}>‹</button>
+          <div style={{textAlign:"center"}}>
+            <div className="cal-month">{BN_MONTHS[viewM]}</div>
+            <div className="cal-year">{toBengali(viewY)}</div>
+          </div>
+          <button className="cal-nav-btn" onClick={nextMonth}>›</button>
+        </div>
+
+        <div className="cal-grid">
+          {BN_DAYS.map(d => <div key={d} className="cal-day-hd">{d}</div>)}
+          {cells.map((d, i) => {
+            if (!d) return <div key={i} className="cal-day empty" />;
+            const past = isPast(d);
+            const aus  = !!TITHI_MAP[d];
+            const selected = isSel(d);
+            const classes = ["cal-day", past?"past":"", isToday(d)?"today":"", aus?"auspicious":"", selected?"sel":""].filter(Boolean).join(" ");
+            return (
+              <div key={i} className={classes} onClick={() => !past && onSel(new Date(viewY, viewM, d))}>
+                {toBengali(d)}
+                {aus && !past && <span className="tithi-badge" style={{position:"absolute",top:2,right:2,fontSize:7}}>★</span>}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="cal-legend">
+          <div className="cal-legend-item"><div className="leg-dot" style={{background:C.saffron}}/> নির্বাচিত</div>
+          <div className="cal-legend-item"><div className="leg-dot" style={{background:C.gold}}/> শুভ তিথি</div>
+          <div className="cal-legend-item"><div className="leg-dot" style={{background:C.ash}}/> আজ</div>
+        </div>
+
+        {selDate && (
+          <div style={{marginTop:12,padding:"10px 12px",background:C.goldLt,borderRadius:12,border:`1px solid ${C.gold}44`,fontSize:12,color:C.inkMid,fontWeight:500}}>
+            📅 নির্বাচিত: <strong>{toBengali(selDate.getDate())} {BN_MONTHS[selDate.getMonth()]}, {toBengali(selDate.getFullYear())}</strong>
+            {TITHI_MAP[selDate.getDate()] && <span style={{marginLeft:6,color:C.gold,fontWeight:700}}>✦ {TITHI_MAP[selDate.getDate()]}</span>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Step 3: Time Slot ── */
+function StepSlot({ selSlot, onSel }) {
+  return (
+    <div className="fade-in">
+      <div className="sec-hd">
+        <div className="sec-om">ॐ</div>
+        <div className="sec-title">সময় বেছে নিন</div>
+        <div className="sec-sub">✦ চিহ্নিত সময় শুভ মুহূর্ত</div>
+      </div>
+      <div className="slot-grid">
+        {TIME_SLOTS.map(s => (
+          <div key={s.id}
+            className={`slot-card ${!s.available?"unavail":""} ${selSlot?.id===s.id?"sel":""}`}
+            onClick={() => s.available && onSel(s)}>
+            <div style={{fontSize:22}}>{s.available ? (s.auspicious?"🌟":"🕐") : "🚫"}</div>
+            <div style={{flex:1}}>
+              <div className="slot-time">{s.time}</div>
+              <div className="slot-period">{s.period}</div>
+              {!s.available && <div style={{fontSize:9,color:C.red,fontWeight:700,marginTop:2}}>বুকড</div>}
+            </div>
+            {s.auspicious && s.available && <div className="slot-aus">শুভ</div>}
+          </div>
+        ))}
+      </div>
+      <div style={{padding:"0 16px 14px",fontSize:11,color:C.inkLt,lineHeight:1.7}}>
+        🔱 ব্রাহ্মমুহূর্ত, পূর্বাহ্ন ও গোধূলি লগ্ন পূজার জন্য সর্বোত্তম। তবে আপনার সুবিধামতো যেকোনো সময় বেছে নিতে পারেন।
+      </div>
+    </div>
+  );
+}
+
+/* ── Step 4: Summary ── */
+function StepSummary({ svc, date, slot, address, onAddress }) {
+  const platform = Math.round(svc.dakshina * 0.10);
+  const total = svc.dakshina + platform;
+
+  return (
+    <div className="fade-in">
+      <div className="sec-hd">
+        <div className="sec-om">ॐ</div>
+        <div className="sec-title">বুকিং সারসংক্ষেপ</div>
+        <div className="sec-sub">বিস্তারিত যাচাই করুন</div>
+      </div>
+
+      <div className="sum-wrap">
+        {/* Purohit */}
+        <div style={{background:C.goldLt,borderRadius:14,padding:"12px 14px",border:`1px solid ${C.gold}44`,display:"flex",gap:12,alignItems:"center"}}>
+          <div style={{fontSize:32}}>👨‍🦳</div>
+          <div>
+            <div style={{fontSize:14,fontWeight:700,color:C.ink}}>পণ্ডিত রামকৃষ্ণ শাস্ত্রী</div>
+            <div style={{fontSize:11,color:C.inkLt}}>বেদান্ত বিশারদ · ২৮ বছরের অভিজ্ঞতা</div>
+            <div style={{fontSize:11,color:C.gold,marginTop:2}}>★★★★★ ৪.৯ (৩১২ রিভিউ)</div>
+          </div>
+          <span style={{marginLeft:"auto",fontSize:10,fontWeight:700,color:C.green,background:C.greenLt,padding:"3px 8px",borderRadius:99}}>✓ যাচাইকৃত</span>
+        </div>
+
+        {/* Details */}
+        <div style={{border:`1px solid ${C.border}`,borderRadius:14,overflow:"hidden"}}>
+          {[
+            {k:"পূজার ধরন", v:`${svc.icon} ${svc.name}`},
+            {k:"তারিখ",     v: date ? `${toBengali(date.getDate())} ${BN_MONTHS[date.getMonth()]}, ${toBengali(date.getFullYear())}` + (TITHI_MAP[date.getDate()] ? ` ✦ ${TITHI_MAP[date.getDate()]}` : "") : "—"},
+            {k:"সময়",       v: slot ? `${slot.time} (${slot.period})` : "—"},
+            {k:"সময়কাল",    v: svc.duration},
+          ].map((r,i) => (
+            <div key={i} className="sum-row" style={{padding:"11px 14px"}}>
+              <div className="sum-key">{r.k}</div>
+              <div className="sum-val">{r.v}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Address */}
+        <div>
+          <div style={{fontSize:12,fontWeight:700,color:C.inkLt,marginBottom:6}}>📍 পূজার ঠিকানা</div>
+          <div className="address-box">
+            <input className="addr-input" placeholder="বাড়ির নম্বর, রাস্তার নাম" value={address.line1} onChange={e=>onAddress({...address,line1:e.target.value})} />
+            <input className="addr-input" placeholder="এলাকা / পাড়া" value={address.area} onChange={e=>onAddress({...address,area:e.target.value})} />
+            <input className="addr-input" placeholder="শহর" value={address.city} onChange={e=>onAddress({...address,city:e.target.value})} />
+          </div>
+        </div>
+
+        {/* Price Breakdown */}
+        <div style={{border:`1px solid ${C.border}`,borderRadius:14,overflow:"hidden"}}>
+          {[
+            {k:"দক্ষিণা",         v:fmtPrice(svc.dakshina)},
+            {k:"প্ল্যাটফর্ম ফি (১০%)",v:fmtPrice(platform)},
+          ].map((r,i)=>(
+            <div key={i} className="sum-row" style={{padding:"10px 14px"}}>
+              <div className="sum-key">{r.k}</div>
+              <div className="sum-val">{r.v}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="sum-total-row">
+          <div className="sum-total-key">মোট পরিমাণ</div>
+          <div className="sum-total-val">{fmtPrice(total)}</div>
+        </div>
+
+        <div style={{background:C.blueLt,borderRadius:12,padding:"10px 13px",fontSize:11,color:C.blue,lineHeight:1.6}}>
+          🔒 আপনার পেমেন্ট নিরাপদ। পূজা সম্পন্ন হওয়ার পর পুরোহিতের অ্যাকাউন্টে টাকা স্থানান্তর হবে।
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Step 5: Payment ── */
+function StepPayment({ svc, payMethod, setPayMethod, onPay, paying }) {
+  const [upiApp, setUpiApp]   = useState(null);
+  const [upiId, setUpiId]     = useState("");
+  const [bank, setBank]       = useState(null);
+  const [cardNo, setCardNo]   = useState("");
+  const [expiry, setExpiry]   = useState("");
+  const [cvv, setCvv]         = useState("");
+  const [cardName, setCardName] = useState("");
+
+  const platform = Math.round(svc.dakshina * 0.10);
+  const total = svc.dakshina + platform;
+
+  const fmtCard = (v) => v.replace(/\D/g,"").slice(0,16).replace(/(.{4})/g,"$1 ").trim();
+  const fmtExp  = (v) => { const c=v.replace(/\D/g,"").slice(0,4); return c.length>2?c.slice(0,2)+"/"+c.slice(2):c; };
+
+  return (
+    <div className="fade-in">
+      <div className="sec-hd">
+        <div className="sec-om">ॐ</div>
+        <div className="sec-title">পেমেন্ট করুন</div>
+        <div className="sec-sub">নিরাপদ ও এনক্রিপ্টেড</div>
+      </div>
+
+      {/* Amount Bar */}
+      <div style={{padding:"12px 16px",background:C.saffronXlt,borderBottom:`1px solid ${C.ash}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{fontSize:13,color:C.inkLt,fontWeight:500}}>মোট পরিমাণ</div>
+        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:26,color:C.saffron,fontWeight:600}}>{fmtPrice(total)}</div>
+      </div>
+
+      <div className="pay-wrap">
+        {/* Method selector */}
+        {PAY_METHODS.map(m => (
+          <div key={m.id}>
+            <div className={`pay-method-card ${payMethod===m.id?"sel":""}`} onClick={()=>setPayMethod(m.id)}>
+              <div className="pay-icon">{m.icon}</div>
+              <div style={{flex:1}}>
+                <div className="pay-label">{m.label}</div>
+                <div className="pay-desc">{m.desc}</div>
+              </div>
+              <div className={`radio ${payMethod===m.id?"sel":""}`} />
+            </div>
+
+            {/* UPI sub-panel */}
+            {payMethod==="upi" && m.id==="upi" && (
+              <div style={{padding:"12px 4px 4px",animation:"fadeUp .25s ease"}}>
+                <div className="upi-grid">
+                  {UPI_APPS.map(a => (
+                    <div key={a.id} className={`upi-btn ${upiApp===a.id?"sel":""}`} onClick={()=>setUpiApp(a.id)}>
+                      <div className="upi-logo" style={{background:a.color}}>{a.emoji}</div>
+                      <div className="upi-name">{a.label}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="upi-input-row">
+                  <input className="upi-input" placeholder="আপনার UPI ID লিখুন (name@upi)" value={upiId} onChange={e=>setUpiId(e.target.value)} />
+                  <button className="upi-verify">যাচাই</button>
+                </div>
+                <div style={{fontSize:11,color:C.inkLt,marginTop:6}}>উদাহরণ: name@okicici · name@ybl · 9876543210@paytm</div>
+              </div>
+            )}
+
+            {/* Card sub-panel */}
+            {payMethod==="card" && m.id==="card" && (
+              <div style={{padding:"12px 4px 4px",animation:"fadeUp .25s ease"}}>
+                <div className="card-form">
+                  <div>
+                    <div style={{fontSize:11,color:C.inkLt,marginBottom:4,fontWeight:600}}>কার্ড নম্বর</div>
+                    <input className="card-input" placeholder="0000  0000  0000  0000" value={fmtCard(cardNo)} onChange={e=>setCardNo(e.target.value.replace(/\s/g,""))} maxLength={19}/>
+                  </div>
+                  <div>
+                    <div style={{fontSize:11,color:C.inkLt,marginBottom:4,fontWeight:600}}>কার্ডধারীর নাম</div>
+                    <input className="card-input" placeholder="নাম (কার্ডে যেমন আছে)" value={cardName} onChange={e=>setCardName(e.target.value)}/>
+                  </div>
+                  <div className="card-row">
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:11,color:C.inkLt,marginBottom:4,fontWeight:600}}>মেয়াদ</div>
+                      <input className="card-input" placeholder="MM/YY" value={fmtExp(expiry)} onChange={e=>setExpiry(e.target.value)} maxLength={5}/>
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:11,color:C.inkLt,marginBottom:4,fontWeight:600}}>CVV</div>
+                      <input className="card-input" placeholder="•••" type="password" value={cvv} onChange={e=>setCvv(e.target.value.slice(0,3))} maxLength={3}/>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Net banking sub-panel */}
+            {payMethod==="net" && m.id==="net" && (
+              <div style={{padding:"12px 4px 4px",animation:"fadeUp .25s ease"}}>
+                <div className="bank-grid">
+                  {BANKS.map(b => (
+                    <div key={b} className={`bank-btn ${bank===b?"sel":""}`} onClick={()=>setBank(b)}>
+                      <div className="bank-icon">{b[0]}</div>
+                      {b}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Escrow note */}
+        <div className="escrow-note">
+          <span style={{fontSize:18}}>🔒</span>
+          <p>আপনার পেমেন্ট আমাদের এসক্রো অ্যাকাউন্টে নিরাপদে জমা থাকবে। পূজা সফলভাবে সম্পন্ন হলেই পুরোহিতের কাছে পাঠানো হবে। যেকোনো সমস্যায় সম্পূর্ণ রিফান্ড পাবেন।</p>
+        </div>
+
+        {/* Security badges */}
+        <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
+          {["🔐 SSL সুরক্ষিত","🏦 PCI-DSS","✅ RBI অনুমোদিত"].map(b=>(
+            <span key={b} style={{fontSize:11,color:C.inkLt,background:C.ashLt,padding:"4px 10px",borderRadius:99,border:`1px solid ${C.border}`,fontWeight:500}}>{b}</span>
+          ))}
+        </div>
+
+        {/* Pay button */}
+        <button className="pay-btn" onClick={onPay} disabled={paying}>
+          {paying ? (
+            <span style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+              <span style={{display:"inline-block",width:18,height:18,border:"2px solid rgba(255,255,255,.3)",borderTopColor:"#fff",borderRadius:"50%",animation:"spin .8s linear infinite"}} />
+              প্রক্রিয়াকরণ হচ্ছে...
+            </span>
+          ) : `🙏 ${fmtPrice(total)} পেমেন্ট করুন`}
+        </button>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  );
+}
+
+/* ── Step 6: Confirmation ── */
+function StepSuccess({ svc, date, slot }) {
+  const bookingId = "PC-" + Math.random().toString(36).slice(2,8).toUpperCase();
+  return (
+    <div className="fade-in">
+      <div className="success-wrap">
+        <div className="success-ring">✓</div>
+        <div className="success-title">বুকিং নিশ্চিত হয়েছে!</div>
+        <div className="success-sub">আপনার বুকিং সফলভাবে সম্পন্ন হয়েছে। পুরোহিতকে SMS পাঠানো হয়েছে।</div>
+        <div className="booking-id">বুকিং আইডি: {bookingId}</div>
+
+        <div className="success-detail">
+          {[
+            {k:"পূজার ধরন", v:`${svc.icon} ${svc.name}`},
+            {k:"পুরোহিত",   v:"পণ্ডিত রামকৃষ্ণ শাস্ত্রী"},
+            {k:"তারিখ",     v: date ? `${toBengali(date.getDate())} ${BN_MONTHS[date.getMonth()]}` : "—"},
+            {k:"সময়",       v: slot?.time ?? "—"},
+            {k:"স্ট্যাটাস", v:"✅ নিশ্চিত"},
+          ].map((r,i)=>(
+            <div key={i} className="sd-row">
+              <span className="sd-k">{r.k}</span>
+              <span className="sd-v">{r.v}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{width:"100%",background:C.blueLt,borderRadius:12,padding:"11px 13px",fontSize:12,color:C.blue,lineHeight:1.7}}>
+          📲 পূজার ২৪ ঘণ্টা ও ২ ঘণ্টা আগে আপনার মোবাইলে রিমাইন্ডার পাঠানো হবে।
+        </div>
+
+        <div style={{display:"flex",gap:10,width:"100%"}}>
+          <button style={{flex:1,padding:"12px",border:`1.5px solid ${C.border}`,borderRadius:12,background:C.white,fontSize:13,fontWeight:600,color:C.inkMid,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>📄 রসিদ ডাউনলোড</button>
+          <button style={{flex:1,padding:"12px",border:"none",borderRadius:12,background:`linear-gradient(135deg,${C.saffronLt},${C.saffron})`,fontSize:13,fontWeight:700,color:"#fff",cursor:"pointer",fontFamily:"'Outfit',sans-serif",boxShadow:`0 4px 14px ${C.saffron}44`}}>🏠 হোমে ফিরুন</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   MAIN APP
+══════════════════════════════════════════════════════════ */
+const STEPS = [
+  {id:1, label:"সেবা"},
+  {id:2, label:"তারিখ"},
+  {id:3, label:"সময়"},
+  {id:4, label:"সারসংক্ষেপ"},
+  {id:5, label:"পেমেন্ট"},
+  {id:6, label:"সম্পন্ন"},
+];
+
+export default function App() {
+  const [step,       setStep]       = useState(1);
+  const [svc,        setSvc]        = useState(null);
+  const [selDate,    setSelDate]    = useState(null);
+  const [selSlot,    setSelSlot]    = useState(null);
+  const [address,    setAddress]    = useState({line1:"",area:"",city:""});
+  const [payMethod,  setPayMethod]  = useState("upi");
+  const [paying,     setPaying]     = useState(false);
+
+  const canNext = () => {
+    if (step===1) return !!svc;
+    if (step===2) return !!selDate;
+    if (step===3) return !!selSlot;
+    if (step===4) return !!(address.line1 && address.city);
+    return true;
+  };
+
+  const handleNext = () => {
+    if (step < 6) setStep(s => s+1);
+  };
+
+  const handlePay = () => {
+    setPaying(true);
+    setTimeout(() => { setPaying(false); setStep(6); }, 2200);
+  };
+
+  return (
+    <>
+      <style>{G}</style>
+      <div className="wrap">
+        <div style={{maxWidth:480, margin:"0 auto", paddingBottom:40}}>
+
+          {/* App Header */}
+          <div style={{textAlign:"center",padding:"20px 16px 0"}}>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:13,color:C.saffron,letterSpacing:3,textTransform:"uppercase",opacity:.7}}>ॐ নমো নারায়ণায়</div>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,color:C.ink,fontWeight:600,letterSpacing:"-0.5px"}}>PujaConnect</div>
+            <div style={{fontSize:11,color:C.inkLt,marginTop:2}}>পূজো বুকিং · তারিখ · পেমেন্ট</div>
+          </div>
+
+          {/* Step Bar */}
+          {step < 6 && (
+            <div className="step-bar">
+              {STEPS.slice(0,5).map((s,i) => (
+                <div key={s.id} style={{display:"flex",alignItems:"center"}}>
+                  <div className="step-node" onClick={()=> s.id < step && setStep(s.id)}>
+                    <div className={`step-circle ${step>s.id?"done":step===s.id?"active":""}`}>
+                      {step > s.id ? "✓" : s.id}
+                    </div>
+                    <div className={`step-label ${step===s.id?"active":""}`}>{s.label}</div>
+                  </div>
+                  {i<4 && <div className={`step-line ${step>s.id?"done":""}`} />}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Purohit strip (steps 2-5) */}
+          {step >= 2 && step < 6 && (
+            <div style={{margin:"14px 16px 0"}}>
+              <div className="purohit-strip" style={{borderRadius:14}}>
+                <div className="p-avatar">👨‍🦳</div>
+                <div style={{flex:1}}>
+                  <div className="p-name">পণ্ডিত রামকৃষ্ণ শাস্ত্রী</div>
+                  <div style={{fontSize:11,color:C.inkLt}}>বেদান্ত বিশারদ · কলকাতা</div>
+                </div>
+                <span className="p-badge">★ ৪.৯</span>
+              </div>
+            </div>
+          )}
+
+          {/* Main Card */}
+          <div style={{margin:"14px 16px 0"}}>
+            <div className="card">
+              {step===1 && <StepService sel={svc} onSel={setSvc} />}
+              {step===2 && <StepCalendar selDate={selDate} onSel={setSelDate} />}
+              {step===3 && <StepSlot selSlot={selSlot} onSel={setSelSlot} />}
+              {step===4 && <StepSummary svc={svc} date={selDate} slot={selSlot} address={address} onAddress={setAddress} />}
+              {step===5 && <StepPayment svc={svc} payMethod={payMethod} setPayMethod={setPayMethod} onPay={handlePay} paying={paying} />}
+              {step===6 && <StepSuccess svc={svc} date={selDate} slot={selSlot} />}
+            </div>
+          </div>
+
+          {/* Bottom Nav */}
+          {step < 6 && (
+            <div className="bottom-nav" style={{margin:"0 16px",borderRadius:"0 0 16px 16px",borderTop:`1px solid ${C.ash}`}}>
+              {step > 1 && (
+                <button className="btn-back" onClick={()=>setStep(s=>s-1)}>← পিছে</button>
+              )}
+              {step < 5 && (
+                <button className="btn-next" disabled={!canNext()} onClick={handleNext}>
+                  {step===4 ? "পেমেন্টে যান →" : "পরবর্তী →"}
+                </button>
+              )}
+            </div>
+          )}
+
+          <div style={{textAlign:"center",marginTop:18,fontSize:11,color:C.border}}>
+            PujaConnect · Phase 1 MVP · React Component
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
